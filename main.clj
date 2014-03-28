@@ -40,7 +40,10 @@
 
 (def pythonized-example (pythonize example))
 (def relispified-example (lispify pythonized-example))
-(println pythonized-example)
+
+(defn leftparen->addnewline [c] (s/replace c #"\(" "\n\("))
+(def pythonize2 (comp leftparen->addnewline remove-whitespace))
+(println (pythonize2 example))
 (newline)
-(println relispified-example)
+;(println relispified-example)
 
