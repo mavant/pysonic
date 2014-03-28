@@ -1,15 +1,19 @@
-(use '[clojure.string :as s])
+(use '[clojure.string :as s :only [replace split]] )
 (use 'clojure.java.io)
 
 (defn remove-whitespace [c] (s/replace c #"\s+" " "))
-(defn remove-right-parens [c] (s/replace c #"\)" ""))
+(defn remove-right-parens [c] (s/replace c #"\)" "\n"))
 (defn split-on-parens [c] (s/split c #"\("))
 (defn num-right-parens [c] (count (re-seq #"\)" c)))
-(defn num-tabs [l] (let [a (map (fn [y] (num-right-parens y)) l)] (map (fn [n] (- n (apply + (take n a)))) (range 1 (inc (count a))))))  
+(defn num-tabs [l] (let [a (map (fn [y] (num-right-parens y)) l)] (map (fn [n] (- (dec n) (apply + (take n a)))) (range 1 (inc (count a))))))  
 (defn newlines-and-tabs [l] (map (fn [i] (apply str "\n" (repeat i "    "))) (num-tabs l)))
 (defn parens->tabreturns [c] (let [b (split-on-parens c)] (interleave (map remove-right-parens b) (newlines-and-tabs b))))
 
-(def pythonize (comp parens->tabreturns remove-whitespace)) 
+(def pythonize (comp (partial apply str) parens->tabreturns remove-whitespace))
+
+(defn newlines->leftparens [c] (s/replace c #"\n" "("))
+(defn tabs->rightparens [c] (s/replace c #"\s\s\s\s" ")"))
+(def lispify (comp newlines->leftparens tabs->rightparens))
 
 (def example "(defn line->ints [line] (map (fn [l] (Integer/parseInt l)) (split line #\"\\s+\"))); Convert a string/line to a list of integers.
 
@@ -34,5 +38,9 @@
              (write outputs)
              )")
 
+(def pythonized-example (pythonize example))
+(def relispified-example (lispify pythonized-example))
+(println pythonized-example)
+(newline)
+(println relispified-example)
 
-(println (pythonize example))
