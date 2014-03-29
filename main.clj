@@ -15,9 +15,9 @@
 (defn tabs->rightparens [c] (s/replace c #"\s\s\s\s" ")"))
 (def lispify (comp newlines->leftparens tabs->rightparens))
 
-(def example "(defn line->ints [line] (map (fn [l] (Integer/parseInt l)) (split line #\"\\s+\"))); Convert a string/line to a list of integers.
+(def example "(defn line->ints [line] (map (fn [l] (Integer/parseInt l)) (split line #\"\\s+\")))
 
-             (defn solutions->outputs [solutions] (map (fn [n s] (str \"Case #\" (inc n) \": \" s \"\n\")) (range (count solutions)) solutions)); Convert a sequence of solutions to a sequence of formatted Case# strings.
+             (defn solutions->outputs [solutions] (map (fn [n s] (str \"Case #\" (inc n) \": \" s \"\n\")) (range (count solutions)) solutions))
 
              (let [
              filename \"A-large-practice\"
@@ -41,9 +41,14 @@
 (def pythonized-example (pythonize example))
 (def relispified-example (lispify pythonized-example))
 
-(defn leftparen->addnewline [c] (s/replace c #"\(" "\n\("))
-(def pythonize2 (comp leftparen->addnewline remove-whitespace))
-(println (pythonize2 example))
-(newline)
-;(println relispified-example)
+(defn leftparen->addnewline [c] (s/replace c #"\(" "\n("))
 
+(defn match-parens [c] (re-seq #"[\)\(]" c))
+(defn split-on-all-parens [c] (s/split c #"[\)\(]"))
+ 
+(defn indent-levels [l] (reduce (fn [a b] (conj a (+ (peek a) (if (= b ")") -1 1)))) [-1] l))
+
+(defn thing [c] (map (fn [a b] (str "\n" (apply str (repeat a "    ")) b)) (indent-levels (match-parens c)) (split-on-all-parens c)))
+
+(defn remove-empty-lines [l] (filter (fn [c] (< 0 (count (re-seq #"\w" c)))) l))
+(println (apply str (remove-empty-lines (thing (remove-whitespace example)))))
