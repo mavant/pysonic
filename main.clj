@@ -1,54 +1,36 @@
-(use '[clojure.string :as s :only [replace split]] )
-(use 'clojure.java.io)
+(defmacro s-expr->semantic-whitespace "Convert a list of expressions in Clojure to semantic-whitespace form." ([l] (apply str (interpose " "(macroexpand-1 `(s-expr->semantic-whitespace ~l 1))))) ([l n] (map (fn [x] (if (list? x) (apply str "\n" (apply str (repeat n "\t")) (interpose " "(macroexpand-1 `(s-expr->semantic-whitespace ~x ~(+ n 1)))) ) x)) l)))
 
-(defn remove-whitespace [c] (s/replace c #"\s+" " "))
-(defn remove-right-parens [c] (s/replace c #"\)" "\n"))
-(defn split-on-parens [c] (s/split c #"\("))
-(defn num-right-parens [c] (count (re-seq #"\)" c)))
-(defn num-tabs [l] (let [a (map (fn [y] (num-right-parens y)) l)] (map (fn [n] (- (dec n) (apply + (take n a)))) (range 1 (inc (count a))))))  
-(defn newlines-and-tabs [l] (map (fn [i] (apply str "\n" (repeat i "    "))) (num-tabs l)))
-(defn parens->tabreturns [c] (let [b (split-on-parens c)] (interleave (map remove-right-parens b) (newlines-and-tabs b))))
+(def example (macroexpand-1 '(s-expr->semantic-whitespace (defn 
+                                                            tabs->parens [c] (map add-parens (rest
 
-(def pythonize (comp (partial apply str) parens->tabreturns remove-whitespace))
+                                                                                               (split-on-newlines 
+                                                                                                 c)) (list-deltas (code->numtabs c)))))))
 
-(defn newlines->leftparens [c] (s/replace c #"\n" "("))
-(defn tabs->rightparens [c] (s/replace c #"\s\s\s\s" ")"))
-(def lispify (comp newlines->leftparens tabs->rightparens))
+;=>
+;defntabs->parens[c]
+;	map add-parens 
+;		rest 
+;			split-on-newlines c 
+;		list-deltas 
+;			code->numtabs c
+;
+;
+;
 
-(def example "(defn line->ints [line] (map (fn [l] (Integer/parseInt l)) (split line #\"\\s+\")))
 
-             (defn solutions->outputs [solutions] (map (fn [n s] (str \"Case #\" (inc n) \": \" s \"\n\")) (range (count solutions)) solutions))
+(defn split-on-newlines [s] (clojure.string/split s #"\n"))
 
-             (let [
-             filename \"A-large-practice\"
-  outfile (str filename \".out\")
-             infile (str filename \".in\")
-             write (fn [outs] (with-open [wrt (writer outfile)] (doseq [o outs] (.write wrt o))))
-             inputs (split-lines (slurp infile))
-             [firstline & lines] inputs
-             [L D N] (line->ints firstline)
+(defn indented? [s] (not (nil? (re-find #"\t" s))))
 
-             words (take D lines)
-             cases (map casestring->pattern (drop D lines))
-             wordmatches (fn [pattern] (map #(re-matches pattern %) words))
-             nummatches (fn [pattern] (count (remove nil? (wordmatches pattern))))
-             solutions (map nummatches cases)
-             outputs (solutions->outputs solutions)
-             ]
-             (write outputs)
-             )")
+(defn tabs->lists [l] (reduce (fn [a b] (if (indented? b) 
+                                          (conj (pop a) (conj (peek a) (clojure.string/replace-first b #"\t" "")))
+                                          (conj a [b]))) [] l))
+(defn disp [x] (if (list? x) (map tabs->lists x) x))
 
-(def pythonized-example (pythonize example))
-(def relispified-example (lispify pythonized-example))
+(defn whitespace->s-exprs [s] (-> s split-on-newlines tabs->lists))
 
-(defn leftparen->addnewline [c] (s/replace c #"\(" "\n("))
+(println example)
 
-(defn match-parens [c] (re-seq #"[\)\(]" c))
-(defn split-on-all-parens [c] (s/split c #"[\)\(]"))
- 
-(defn indent-levels [l] (reduce (fn [a b] (conj a (+ (peek a) (if (= b ")") -1 1)))) [-1] l))
+;(prn (whitespace->s-exprs example))
 
-(defn thing [c] (map (fn [a b] (str "\n" (apply str (repeat a "    ")) b)) (indent-levels (match-parens c)) (split-on-all-parens c)))
-
-(defn remove-empty-lines [l] (filter (fn [c] (< 0 (count (re-seq #"\w" c)))) l))
-(println (apply str (remove-empty-lines (thing (remove-whitespace example)))))
+(prn (disp (split-on-newlines example)))
