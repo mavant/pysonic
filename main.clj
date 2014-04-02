@@ -16,5 +16,5 @@
 
 (comment "And below we have some examples.")
 (def s-expression-example '(s-expr->semantic-whitespace (defn tabs->parens [c] (map add-parens (rest (split-on-newlines c)) (list-deltas (code->numtabs c))))))
-(def semantic-whitespace-example (macroexpand-1 pre-example))
-(def back-to-s-expr-example (whitespace->s-exprs example))
+(def semantic-whitespace-example (macroexpand-1 s-expression-example))
+(def back-to-s-expr-example (whitespace->s-exprs semantic-whitespace-example))
