@@ -19,5 +19,13 @@
 (def example (macroexpand-1 s-expression-example))
 (def back-to-s-expr-example (whitespace->s-exprs example))
 
-
+(newline)
+(println "Original S-expression input:")
+(prn s-expression-example)
+(newline)
+(println "Converted to semantic-whitespace form:")
+(println example)
+(newline)
+(println "Back to S-expression:")
 (prn back-to-s-expr-example)
+(newline)
