@@ -26,6 +26,8 @@
 
 (defn remove-first-tab "Removes the first tab character from a string." [x] (clojure.string/replace-first x #"\t" ""))
 
-(defn whitespace->s-exprs "Converts code from semantic-whitespace form to S-expression form. Accepts either a list of lines or a string." [l] (if (string? l) (whitespace->s-exprs (split-on-newlines l)) (map (fn [x] (concat (vec (first x)) (vec (whitespace->s-exprs (map remove-first-tab (second x)))))) (partition-all 2 (partition-by indented? l)))))
+(defn whitespace->parentheses "Converts a string of code from whitespace notation to parenthetical notation. Output is explicitly wrapped in a do-block for clarity." [l] (if (string? l) (print-str (conj (whitespace->parentheses (split-on-newlines l) 'do))) (map (fn [x] (concat (vec (first x)) (vec (whitespace->parentheses (map remove-first-tab (second x)))))) (partition-all 2 (partition-by indented? l)))))
 
-(prn (whitespace->s-exprs example))
+(defn whitespace->s-exprs "Converts from a string of whitespace-syntax code to an evaluable S-expression." [s] (-> s whitespace->parentheses read-line))
+
+(print (whitespace->s-exprs example))
