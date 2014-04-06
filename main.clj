@@ -1,3 +1,5 @@
+(ns pythonic "Pythonic lets you write Clojure code that looks like Python.")
+
 (defmacro s-expr->semantic-whitespace 
   "Convert a list of expressions in Clojure to semantic-whitespace form." 
   ([l] (apply str (interpose " " (macroexpand-1 `(s-expr->semantic-whitespace ~l 1))))) 
@@ -11,8 +13,7 @@
 
 (defn whitespace->parentheses "Converts a string of code from whitespace notation to parenthetical notation. Output is explicitly wrapped in a do-block for clarity." [l] (if (string? l) (print-str (conj (whitespace->parentheses (split-on-newlines l)) 'do)) (map (fn [x] (concat (vec (first x)) (vec (whitespace->parentheses (map remove-first-tab (second x)))))) (partition-all 2 (partition-by indented? l)))))
 
-(defn whitespace->s-exprs "Converts from a string of whitespace-syntax code to an evaluable S-expression." [s] (read-string (whitespace->parentheses s)))
-
+(defn whitespace->s-exprs "Converts from a string of whitespace-syntax code to an evaluable S-expression." [s] (clojure.core/read-string (whitespace->parentheses s)))
 
 (comment "And below we have some examples.")
 (def s-expression-example '(defn tabs->parens [c] (map add-parens (rest (split-on-newlines c)) (list-deltas (code->numtabs c)))))
@@ -29,3 +30,10 @@
 (println "Back to S-expression:")
 (println back-to-s-expr-example)
 (newline)
+
+
+(comment "Here there be dragons...")
+
+(def read-string whitespace->s-exprs)
+
+(println (read))
