@@ -7,4 +7,5 @@ Pysonic is currently a very simple Clojure macro that makes Lisp-family code loo
 Further information [available here](http://mavant.com/8/).
 
 Q: Why is it spelled 'pysonic'? Is it like 'psionics'?
-A: No, psionics were the words part of D&D. Try saying 'pysonic' with a Lisp. (Credit to @scheidegger for that one.)
+
+A: No, psionics were the worst part of D&D. Try saying 'pysonic' with a Lisp. (Credit to @scheidegger for that one.)
